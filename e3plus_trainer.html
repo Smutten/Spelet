@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E3+ Tränare – Koncentrations- och igenkänningstest</title>
+  <style>
+    :root{
+      --bg:#0f1220;
+      --panel:#171a2b;
+      --panel-2:#1f2340;
+      --text:#e8ebff;
+      --muted:#aeb5d6;
+      --accent:#6ea8fe;
+      --good:#38d273;
+      --bad:#ff5c7c;
+      --warn:#ffd166;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+      --radius-sm:10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 20% -10%, #223 0%, #111 60%, #0b0e19 100%);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    header{
+      max-width:1100px; margin:24px auto 0; padding:0 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .brand{display:flex; align-items:center; gap:12px;}
+    .logo{
+      width:40px; height:40px; border-radius:10px;
+      background: linear-gradient(135deg, #6ea8fe, #9f7aea);
+      box-shadow: var(--shadow);
+    }
+    h1{font-size:22px; margin:0}
+    .container{
+      max-width:1100px; margin:18px auto; padding:16px;
+      display:grid; grid-template-columns: 360px 1fr; gap:18px;
+    }
+    @media (max-width: 900px){
+      .container{grid-template-columns:1fr}
+    }
+    .panel{
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid #20264a;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .controls h2, .stats h2{font-size:16px; margin:0 0 10px; color:#cbd3ff; letter-spacing:.3px}
+    .row{display:flex; gap:10px; align-items:center; margin:8px 0}
+    label{font-size:14px; color: var(--muted); width:140px}
+    input[type="number"], select{
+      width:110px; padding:8px 10px; border-radius:10px; background:#11152b; color:var(--text);
+      border:1px solid #2a2f55; font-family:var(--mono);
+    }
+    input[type="range"]{width:100%}
+    button{
+      appearance:none; border:0; border-radius:12px; padding:10px 14px; font-weight:600;
+      background: #2a3161; color:#e8ebff; cursor:pointer; box-shadow: var(--shadow);
+    }
+    button.primary{background: linear-gradient(135deg, #6ea8fe, #7c9dff)}
+    button.ghost{background:transparent; border:1px solid #32407a}
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .kbd{font-family:var(--mono); background:#0c1022; border:1px solid #2d325a; border-radius:8px; padding:4px 6px; font-size:12px}
+    .grid-wrap{
+      min-height:520px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+      border-radius:var(--radius);
+      background:
+        radial-gradient(600px 300px at 85% -10%, #28315e 0%, rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, #12162b, #0f142a);
+      border:1px solid #232a51;
+    }
+    .hud{
+      position:absolute; top:12px; left:12px; display:flex; gap:8px; flex-wrap:wrap;
+      font-family:var(--mono); font-size:13px; color:#cbd3ff;
+    }
+    .chip{
+      background:#0c1024; border:1px solid #28315a; border-radius:999px; padding:6px 10px;
+    }
+    .stimulus{
+      display:grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px);
+      gap:8px; padding:8px; border-radius:12px;
+      background:rgba(0,0,0,.2);
+    }
+    .cell{
+      width:80px; height:80px; display:flex; align-items:center; justify-content:center;
+      font-size:42px; border-radius:10px; border:1px solid #2a2f55; background: #0b0f26;
+      transition: transform .08s ease;
+      user-select:none;
+    }
+    .blink{ animation:blink .22s ease }
+    @keyframes blink{ from{ transform:scale(0.96) } to{ transform:scale(1) } }
+    .actions{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap}
+    .actions button{flex:1}
+    .stats-grid{display:grid; grid-template-columns: repeat(2, 1fr); gap:10px}
+    .stat{
+      background:#101534; border:1px solid #262d5a; border-radius:12px; padding:12px;
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .stat .label{color:var(--muted); font-size:12px; letter-spacing:.3px}
+    .stat .value{font-family:var(--mono); font-size:18px}
+    .pill{padding:2px 6px; border-radius:999px; font-family:var(--mono); font-size:12px}
+    .good{background:rgba(56,210,115,.12); border:1px solid rgba(56,210,115,.4); color:#bff4d2}
+    .bad{background:rgba(255,92,124,.12); border:1px solid rgba(255,92,124,.4); color:#ffd0da}
+    .warn{background:rgba(255,209,102,.12); border:1px solid rgba(255,209,102,.4); color:#fff0c1}
+    .help{font-size:13px; color:#cbd3ff; line-height:1.5}
+    .help ul{margin:8px 0 0 18px}
+    .footer{max-width:1100px; margin:0 auto 30px; padding:0 16px; color:var(--muted); font-size:12px}
+    .sr-only{position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;}
+    .toggle{cursor:pointer; display:inline-flex; align-items:center; gap:8px}
+    .toggle input{appearance:none; width:42px; height:24px; border-radius:999px; background:#2a2f55; position:relative; outline:none}
+    .toggle input::after{content:""; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition: all .2s ease}
+    .toggle input:checked{background:#6ea8fe}
+    .toggle input:checked::after{left:21px}
+    .flash{animation: flash .35s ease}
+    @keyframes flash{ from{ box-shadow:0 0 0 0 rgba(56,210,115,.0) } to{ box-shadow:0 0 0 12px rgba(56,210,115,.0) } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>E3+ Tränare <span style="font-weight:400; color:#aeb5d6">— Identifiera "E med tre prickar"</span></h1>
+    </div>
+    <label class="toggle" title="Högkontrastläge">
+      <span style="font-size:13px; color:#cbd3ff">Högkontrast</span>
+      <input id="contrastToggle" type="checkbox" aria-label="Högkontrastläge">
+    </label>
+  </header>
+
+  <div class="container">
+    <section class="panel controls" aria-label="Kontroller och inställningar">
+      <h2>Inställningar</h2>
+
+      <div class="row">
+        <label for="duration">Testlängd (sek)</label>
+        <input id="duration" type="number" min="30" max="600" value="120" />
+      </div>
+
+      <div class="row">
+        <label for="trialTime">Stimulus‑tid (ms)</label>
+        <input id="trialTime" type="number" min="200" max="2000" step="50" value="900" />
+      </div>
+
+      <div class="row">
+        <label for="isiTime">Paus/ISI (ms)</label>
+        <input id="isiTime" type="number" min="0" max="1500" step="50" value="200" />
+      </div>
+
+      <div class="row">
+        <label for="targetRate">Mål‑frekvens (%)</label>
+        <input id="targetRate" type="number" min="10" max="90" step="5" value="35" />
+      </div>
+
+      <div class="row">
+        <label for="noiseDots">Störprickar (0–5)</label>
+        <input id="noiseDots" type="number" min="0" max="5" step="1" value="2" />
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="startBtn" class="primary">Starta testet</button>
+        <button id="stopBtn" class="ghost" disabled>Stoppa</button>
+      </div>
+
+      <div class="panel stats" style="margin-top:14px">
+        <h2>Statistik</h2>
+        <div class="stats-grid">
+          <div class="stat"><div class="label">Tid kvar</div><div id="timeLeft" class="value">–</div></div>
+          <div class="stat"><div class="label">Stimuli</div><div id="trials" class="value">0</div></div>
+          <div class="stat"><div class="label">Korrekt</div><div id="correct" class="value">0</div></div>
+          <div class="stat"><div class="label">Fel</div><div id="wrong" class="value">0</div></div>
+          <div class="stat"><div class="label">Missade</div><div id="missed" class="value">0</div></div>
+          <div class="stat"><div class="label">Träffsäkerhet</div><div id="accuracy" class="value">–</div></div>
+          <div class="stat"><div class="label">Reaktion (medel)</div><div id="rt" class="value">–</div></div>
+          <div class="stat"><div class="label">Poäng</div><div id="score" class="value">0</div></div>
+        </div>
+      </div>
+
+      <div class="panel help" style="margin-top:14px">
+        <h2>Hur funkar testet?</h2>
+        <p>Du ser en 3×3‑ruta. Ett stimulus är <b>träff</b> när <span class="kbd">E</span> ligger i mitten och <b>exakt tre</b> av de åtta omkringliggande rutorna innehåller en <span class="kbd">•</span> (prick).</p>
+        <ul>
+          <li>Tryck <span class="kbd">J</span> för <b>JA</b> (träff) och <span class="kbd">F</span> för <b>NEJ</b>.</li>
+          <li>Du kan också klicka på knapparna <b>JA</b>/<b>NEJ</b> under rutan.</li>
+          <li>Inställningarna ovan låter dig justera tempo, längd och störprickar.</li>
+        </ul>
+        <p style="margin-top:8px">Poäng: +1 korrekt, −1 fel, 0 miss. Sikta på hög noggrannhet först, höj sedan tempot.</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Testyta">
+      <div class="grid-wrap" id="arena">
+        <div class="hud" aria-live="polite">
+          <div class="chip">Tryck <span class="kbd">J</span> = JA</div>
+          <div class="chip">Tryck <span class="kbd">F</span> = NEJ</div>
+          <div class="chip">Stimulus <span id="hudStimulus">–</span> / <span id="hudTotal">–</span></div>
+        </div>
+        <div id="stimulus" class="stimulus" role="img" aria-label="Stimulusruta 3x3"></div>
+      </div>
+      <div class="actions">
+        <button id="yesBtn">JA (J)</button>
+        <button id="noBtn">NEJ (F)</button>
+        <button id="restartBtn" class="ghost" title="Starta om testet">Starta om</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">
+    Tips: Börja med längre stimulus‑tid (t.ex. 1200 ms) och lägre mål‑frekvens. Öka hastigheten när din träffsäkerhet är stabil (&gt;90%). Tangenterna fungerar även på mobil med anslutet tangentbord.
+  </div>
+
+  <script>
+    // ---------------- State ----------------
+    const el = {
+      duration: document.getElementById('duration'),
+      trialTime: document.getElementById('trialTime'),
+      isiTime: document.getElementById('isiTime'),
+      targetRate: document.getElementById('targetRate'),
+      noiseDots: document.getElementById('noiseDots'),
+      startBtn: document.getElementById('startBtn'),
+      stopBtn: document.getElementById('stopBtn'),
+      restartBtn: document.getElementById('restartBtn'),
+      yesBtn: document.getElementById('yesBtn'),
+      noBtn: document.getElementById('noBtn'),
+      stimulus: document.getElementById('stimulus'),
+      timeLeft: document.getElementById('timeLeft'),
+      trials: document.getElementById('trials'),
+      correct: document.getElementById('correct'),
+      wrong: document.getElementById('wrong'),
+      missed: document.getElementById('missed'),
+      accuracy: document.getElementById('accuracy'),
+      score: document.getElementById('score'),
+      hudStimulus: document.getElementById('hudStimulus'),
+      hudTotal: document.getElementById('hudTotal'),
+      contrastToggle: document.getElementById('contrastToggle'),
+      arena: document.getElementById('arena')
+    };
+
+    const state = {
+      running:false,
+      timerId:null,
+      trialId:null,
+      endTime:0,
+      totals:{
+        trials:0, correct:0, wrong:0, missed:0, score:0, rt:[], targets:0
+      },
+      current:{
+        isTarget:false,
+        responded:false,
+        startTime:0
+      }
+    };
+
+    // -------------- Utils --------------
+    const clamp = (n,min,max)=> Math.max(min, Math.min(max,n));
+    const formatMs = ms => {
+      const s = Math.max(0, Math.floor(ms/1000));
+      const m = Math.floor(s/60);
+      const r = s%60;
+      return (m>0? m + 'm ' : '') + r + 's';
+    };
+    function sampleTarget(targetRate){
+      return Math.random() < (targetRate/100);
+    }
+    function randInt(min,max){ return (Math.random()*(max-min+1) | 0) + min; }
+
+    // -------------- Stimulus generation --------------
+    function renderStimulus(isTarget, noiseDots){
+      el.stimulus.innerHTML = '';
+      const grid = [];
+      for(let i=0;i<9;i++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        grid.push(cell);
+        el.stimulus.appendChild(cell);
+      }
+      // indices 0..8, center is 4
+      // neighbors indices
+      const neighbors = [0,1,2,3,5,6,7,8];
+
+      // Base: clear all
+      grid.forEach(c=>c.textContent='');
+
+      // Place center: E or other letter
+      const letters = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'; // no J for clarity
+      if(isTarget){
+        grid[4].textContent = 'E';
+      }else{
+        // Either non-E center or E but not exactly 3 dots
+        if(Math.random()<0.5){
+          // Non-E
+          let ch = 'E';
+          while(ch==='E'){
+            ch = letters[randInt(0,letters.length-1)];
+          }
+          grid[4].textContent = ch;
+        }else{
+          grid[4].textContent = 'E';
+        }
+      }
+
+      // Decide dot placement:
+      // For target: exactly 3 neighbor dots + optional noise dots in non-neighbor random cells outside neighbors? (we only have neighbors)
+      // We'll ensure exactly 3 dots among neighbors for target.
+      if(isTarget){
+        const dots = new Set();
+        while(dots.size<3){
+          dots.add(neighbors[randInt(0,neighbors.length-1)]);
+        }
+        dots.forEach(idx => grid[idx].textContent = '•');
+        // Optionally add extra "noise" dots OUTSIDE neighbors? Not possible, so use a faint decorative dot inside cells with 10% chance but ensure not more than 3 total visible
+        // Instead we'll add faint BORDER flashes as visual noise; skip to keep definition strict.
+      }else{
+        // Non-target: ensure NOT (center E + exactly 3 neighbor dots)
+        // Strategy: randomly pick k dots where k != 3 if center is E; if center not E, any k allowed.
+        let k;
+        if(grid[4].textContent === 'E'){
+          const options = [0,1,2,4,5,6,7,8]; // exclude 3
+          k = options[randInt(0, options.length-1)];
+        }else{
+          k = randInt(0,5); // arbitrary variety
+        }
+        const used = new Set();
+        while(used.size<k){
+          used.add(neighbors[randInt(0,neighbors.length-1)]);
+        }
+        used.forEach(idx => grid[idx].textContent = '•');
+      }
+
+      // Add extra random noise dots sprinkled anywhere excluding cells already with a char (if requested)
+      let extra = clamp(parseInt(noiseDots||0,10),0,5);
+      while(extra>0){
+        const idx = randInt(0,8);
+        if(el.stimulus.children[idx].textContent===''){
+          el.stimulus.children[idx].textContent = '•';
+          extra--;
+        }else{
+          // try another
+          if([...el.stimulus.children].every(c=>c.textContent!=='')) break;
+        }
+      }
+
+      // Accessibility label
+      const textGrid = [...el.stimulus.children].map(c=> c.textContent || '·').join('');
+      el.stimulus.setAttribute('aria-label', 'Stimulus: ' + textGrid);
+      el.stimulus.classList.remove('blink'); void el.stimulus.offsetWidth; el.stimulus.classList.add('blink');
+    }
+
+    function isCurrentTarget(){
+      // Check if current stimulus is target: center E and exactly three neighbors are dots
+      const cells = [...el.stimulus.children];
+      if(cells.length !== 9) return false;
+      const centerE = (cells[4].textContent === 'E');
+      if(!centerE) return false;
+      const neighborsIdx = [0,1,2,3,5,6,7,8];
+      let dots = 0;
+      for(const i of neighborsIdx){
+        if(cells[i].textContent === '•') dots++;
+      }
+      return dots === 3;
+    }
+
+    // -------------- Trial flow --------------
+    function resetStats(){
+      state.totals = {trials:0, correct:0, wrong:0, missed:0, score:0, rt:[], targets:0};
+      updateStats();
+      el.hudStimulus.textContent = '0';
+      el.hudTotal.textContent = '–';
+    }
+
+    function updateStats(){
+      const acc = (state.totals.correct + state.totals.wrong) ?
+        Math.round(100 * state.totals.correct / (state.totals.correct + state.totals.wrong)) : 0;
+      const rt = state.totals.rt.length ? Math.round(state.totals.rt.reduce((a,b)=>a+b,0)/state.totals.rt.length) : null;
+      el.trials.textContent = state.totals.trials;
+      el.correct.textContent = state.totals.correct;
+      el.wrong.textContent = state.totals.wrong;
+      el.missed.textContent = state.totals.missed;
+      el.accuracy.textContent = (state.totals.correct+state.totals.wrong>0)? (acc + '%') : '–';
+      el.rt.textContent = rt? (rt + ' ms') : '–';
+      el.score.textContent = state.totals.score;
+      el.hudStimulus.textContent = state.totals.trials;
+    }
+
+    function enableControls(enabled){
+      el.duration.disabled = !enabled;
+      el.trialTime.disabled = !enabled;
+      el.isiTime.disabled = !enabled;
+      el.targetRate.disabled = !enabled;
+      el.noiseDots.disabled = !enabled;
+      el.startBtn.disabled = !enabled;
+      el.stopBtn.disabled = enabled;
+    }
+
+    function start(){
+      if(state.running) return;
+      resetStats();
+      state.running = true;
+      enableControls(false);
+      const durationMs = clamp(parseInt(el.duration.value,10)*1000, 1000, 60*60*1000);
+      state.endTime = Date.now() + durationMs;
+      el.hudTotal.textContent = Math.ceil(durationMs / (parseInt(el.trialTime.value,10)+parseInt(el.isiTime.value,10)));
+      tick();
+      state.timerId = setInterval(()=>{
+        const left = state.endTime - Date.now();
+        el.timeLeft.textContent = formatMs(left);
+        if(left <= 0){
+          stop();
+        }
+      }, 200);
+      nextTrial();
+    }
+
+    function stop(){
+      if(!state.running) return;
+      state.running = false;
+      clearInterval(state.timerId);
+      clearTimeout(state.trialId);
+      enableControls(true);
+      el.timeLeft.textContent = '0s';
+    }
+
+    function tick(){
+      // UI heartbeat
+    }
+
+    function nextTrial(){
+      if(!state.running) return;
+      // Prepare stimulus
+      state.current.responded = false;
+      state.current.isTarget = sampleTarget(parseInt(el.targetRate.value,10));
+      renderStimulus(state.current.isTarget, parseInt(el.noiseDots.value,10));
+      state.current.startTime = performance.now();
+      state.totals.trials++;
+      if(state.current.isTarget) state.totals.targets++;
+      updateStats();
+
+      // auto-advance after trialTime -> then ISI, during which missed responses are recorded
+      const trialMs = clamp(parseInt(el.trialTime.value,10), 100, 5000);
+      const isiMs = clamp(parseInt(el.isiTime.value,10), 0, 5000);
+
+      state.trialId = setTimeout(()=>{
+        // close trial
+        if(!state.current.responded){
+          // If target and no "JA" => miss; if non-target and no "NEJ" => counted as correct? In E3+ brukar utebliven respons vara neutral.
+          // Vi räknar utebliven respons som miss för båda – för att uppmuntra aktivt beslut.
+          state.totals.missed++;
+          el.arena.classList.add('flash'); setTimeout(()=>el.arena.classList.remove('flash'), 200);
+        }
+        updateStats();
+        // Inter-stimulus interval
+        el.stimulus.innerHTML = '';
+        if(Date.now() >= state.endTime){ stop(); return; }
+        setTimeout(()=> nextTrial(), isiMs);
+      }, trialMs);
+    }
+
+    function handleResponse(yes){
+      if(!state.running) return;
+      if(state.current.responded) return; // one response per trial
+      state.current.responded = true;
+      const target = isCurrentTarget(); // recompute to be safe
+      const rt = Math.round(performance.now() - state.current.startTime);
+      if(yes && target){
+        state.totals.correct++; state.totals.score += 1; state.totals.rt.push(rt);
+        el.arena.style.outline = '2px solid var(--good)';
+        setTimeout(()=> el.arena.style.outline = 'none', 120);
+      }else if(!yes && !target){
+        state.totals.correct++; state.totals.score += 1; state.totals.rt.push(rt);
+        el.arena.style.outline = '2px solid var(--good)';
+        setTimeout(()=> el.arena.style.outline = 'none', 120);
+      }else{
+        state.totals.wrong++; state.totals.score -= 1;
+        el.arena.style.outline = '2px solid var(--bad)';
+        setTimeout(()=> el.arena.style.outline = 'none', 160);
+      }
+      updateStats();
+    }
+
+    // -------------- Events --------------
+    el.startBtn.addEventListener('click', start);
+    el.stopBtn.addEventListener('click', stop);
+    el.restartBtn.addEventListener('click', ()=>{ stop(); start(); });
+    el.yesBtn.addEventListener('click', ()=>handleResponse(true));
+    el.noBtn.addEventListener('click', ()=>handleResponse(false));
+    window.addEventListener('keydown', (e)=>{
+      if(e.repeat) return;
+      const k = e.key.toLowerCase();
+      if(k==='j') handleResponse(true);
+      if(k==='f') handleResponse(false);
+      if(k===' '){ e.preventDefault(); if(state.running) stop(); else start(); }
+    });
+
+    // Contrast toggle
+    el.contrastToggle.addEventListener('change', (e)=>{
+      const on = e.target.checked;
+      if(on){
+        document.documentElement.style.setProperty('--bg', '#000');
+        document.documentElement.style.setProperty('--panel', '#000');
+        document.documentElement.style.setProperty('--panel-2', '#000');
+        document.documentElement.style.setProperty('--text', '#fff');
+        document.documentElement.style.setProperty('--muted', '#c7c7c7');
+      }else{
+        document.documentElement.style.setProperty('--panel', '#171a2b');
+        document.documentElement.style.setProperty('--panel-2', '#1f2340');
+        document.documentElement.style.setProperty('--text', '#e8ebff');
+        document.documentElement.style.setProperty('--muted', '#aeb5d6');
+      }
+    });
+
+    // Init
+    (function init(){
+      resetStats();
+      el.timeLeft.textContent = '–';
+      // Render a sample static stimulus
+      renderStimulus(true, 0);
+      el.hudTotal.textContent = '–';
+    })();
+  </script>
+</body>
+</html>
